@@ -5,7 +5,6 @@ import com.ecommerce.project.payload.AddressDTO;
 import com.ecommerce.project.service.AddressService;
 import com.ecommerce.project.util.AuthUtil;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +15,13 @@ import java.util.List;
 @RequestMapping("/api")
 public class AddressController {
 
-    @Autowired
-    AuthUtil authUtil;
+    private final AuthUtil authUtil;
+    private final AddressService addressService;
 
-    @Autowired
-    AddressService addressService;
+    public AddressController(AuthUtil authUtil, AddressService addressService) {
+        this.authUtil = authUtil;
+        this.addressService = addressService;
+    }
 
     @PostMapping("/addresses")
     public ResponseEntity<AddressDTO> createAddress(@Valid @RequestBody AddressDTO addressDTO){
