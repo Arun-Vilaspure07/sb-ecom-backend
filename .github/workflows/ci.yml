@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -30,7 +32,6 @@ jobs:
       - name: Build & Run Tests
         run: mvn clean verify
 
-      # -------- SonarCloud Scan --------
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -40,9 +41,9 @@ jobs:
           -Dsonar.organization=arun-vilaspure07
           -Dsonar.host.url=https://sonarcloud.io
 
-      # -------- Quality Gate Check --------
       - name: SonarCloud Quality Gate
         uses: SonarSource/sonarcloud-quality-gate-action@v1
+        timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
