@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -30,17 +30,32 @@ jobs:
       - name: Build & Run Tests
         run: mvn clean verify
 
-      - name: SonarQube Scan
-        run: |
-          mvn sonar:sonar \
-          -Dsonar.projectKey=sb-ecom \
-          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+#=====     FOR Sonar Server   =============
+#      - name: SonarQube Scan
+#        run: |
+#          mvn sonar:sonar \
+#          -Dsonar.projectKey=sb-ecom \
+#          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+#          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+#
+#      - name: Sonar Quality Gate
+#        uses: sonarsource/sonarqube-quality-gate-action@master
+#        env:
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Sonar Quality Gate
-        uses: sonarsource/sonarqube-quality-gate-action@master
+      - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+            mvn sonar:sonar \
+            -Dsonar.projectKey=Arun-Vilaspure07_sb-ecom-backend \
+            -Dsonar.organization=arun-vilaspure07 \
+            -Dsonar.host.url=https://sonarcloud.io
+
+            - name: SonarCloud Quality Gate
+              uses: SonarSource/sonarcloud-quality-gate-action@v1
+              env:
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build Docker Image
         run: docker build -t sb-ecom:${{ github.run_number }} .
