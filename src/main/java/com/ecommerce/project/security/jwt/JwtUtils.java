@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.WebUtils;
 
@@ -21,6 +20,7 @@ import java.util.Date;
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    private static final long JWT_COOKIE_EXPIRATION_SECONDS = 24L * 60 * 60;
 
     @Value("${spring.app.jwtSecret}")
     private String jwtSecret;
@@ -48,22 +48,24 @@ public class JwtUtils {
         return null;
     }
 
+
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie, jwt)
+        return ResponseCookie.from(jwtCookie, jwt)
                 .path("/api")
-                .maxAge(24 * 60 * 60)
-                .httpOnly(false)
-                .secure(false)
+                .maxAge(JWT_COOKIE_EXPIRATION_SECONDS)
+                .httpOnly(true)
+                .secure(true)
                 .build();
-        return cookie;
     }
 
     public ResponseCookie getCleanJwtCookie() {
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie, null)
+        return ResponseCookie.from(jwtCookie, "")
                 .path("/api")
+                .maxAge(0)
+                .httpOnly(true)
+                .secure(true)
                 .build();
-        return cookie;
     }
 
     public String generateTokenFromUsername(String username) {
