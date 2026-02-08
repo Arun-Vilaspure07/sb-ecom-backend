@@ -16,6 +16,9 @@ import java.util.List;
 @Transactional
 @Service
 public class AddressServiceImpl implements AddressService{
+
+    private static final String ADDRESS_ENTITY = "Address";
+
     @Autowired
     private AddressRepository addressRepository;
 
@@ -49,7 +52,7 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public AddressDTO getAddressesById(Long addressId) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, "addressId", addressId));
         return modelMapper.map(address, AddressDTO.class);
     }
 
@@ -64,7 +67,7 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
         Address addressFromDatabase = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, "addressId", addressId));
 
         addressFromDatabase.setCity(addressDTO.getCity());
         addressFromDatabase.setPincode(addressDTO.getPincode());
@@ -86,7 +89,7 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public String deleteAddress(Long addressId) {
         Address addressFromDatabase = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, "addressId", addressId));
 
         User user = addressFromDatabase.getUser();
         user.getAddresses().removeIf(address -> address.getAddressId().equals(addressId));

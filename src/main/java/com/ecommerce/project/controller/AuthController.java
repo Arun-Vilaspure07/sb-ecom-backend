@@ -2,9 +2,12 @@ package com.ecommerce.project.controller;
 
 import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.payload.AuthenticationResult;
+import com.ecommerce.project.payload.UserDTO;
+import com.ecommerce.project.payload.UserResponse;
 import com.ecommerce.project.security.request.LoginRequest;
 import com.ecommerce.project.security.request.SignupRequest;
 import com.ecommerce.project.security.response.MessageResponse;
+import com.ecommerce.project.security.response.UserInfoResponse;
 import com.ecommerce.project.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +30,7 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<UserInfoResponse> authenticateUser(@RequestBody LoginRequest loginRequest) {
         AuthenticationResult result = authService.login(loginRequest);
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
                 result.getJwtCookie().toString())
@@ -35,7 +38,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         return authService.register(signUpRequest);
     }
 
@@ -51,12 +54,12 @@ public class AuthController {
 
 
     @GetMapping("/user")
-    public ResponseEntity<?> getUserDetails(Authentication authentication){
+    public ResponseEntity<UserInfoResponse> getUserDetails(Authentication authentication){
         return ResponseEntity.ok().body(authService.getCurrentUserDetails(authentication));
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<?> signoutUser(){
+    public ResponseEntity<MessageResponse> signoutUser(){
         ResponseCookie cookie = authService.logoutUser();
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
                         cookie.toString())
@@ -64,7 +67,7 @@ public class AuthController {
     }
 
     @GetMapping("/sellers")
-    public ResponseEntity<?> getAllSellers(
+    public ResponseEntity<UserResponse> getAllSellers(
             @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber) {
 
         Sort sortByAndOrder = Sort.by(AppConstants.SORT_USERS_BY).descending();

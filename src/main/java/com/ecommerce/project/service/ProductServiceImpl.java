@@ -35,6 +35,13 @@ import java.util.stream.Collectors;
 @Service
 @Transactional   // ✅ ADD THIS LINE
 public class ProductServiceImpl implements ProductService {
+
+    private static final String PRODUCT_ENTITY = "Product";
+    private static final String PRODUCT_ID_FIELD = "productId";
+
+    private static final String CATEGORY_ENTITY = "Category";
+    private static final String CATEGORY_ID_FIELD = "categoryId";
+
     @Autowired
     private CartRepository cartRepository;
 
@@ -68,7 +75,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Category", "categoryId", categoryId));
+                        new ResourceNotFoundException(CATEGORY_ENTITY, CATEGORY_ID_FIELD, categoryId));
 
         boolean isProductNotPresent = true;
 
@@ -114,7 +121,7 @@ public class ProductServiceImpl implements ProductService {
 
         if (category != null && !category.isEmpty()) {
             spec = spec.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(root.get("category").get("categoryName"), category));
+                    criteriaBuilder.like(root.get(CATEGORY_ENTITY).get("categoryName"), category));
         }
 
         Page<Product> pageProducts = productRepository.findAll(spec, pageDetails);
@@ -214,7 +221,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Category", "categoryId", categoryId));
+                        new ResourceNotFoundException(CATEGORY_ENTITY, CATEGORY_ID_FIELD, categoryId));
 
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -278,7 +285,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
         Product productFromDb = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
         Product product = modelMapper.map(productDTO, Product.class);
 
@@ -314,7 +321,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
         // DELETE
         List<Cart> carts = cartRepository.findCartsByProductId(productId);
@@ -328,7 +335,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
         Product productFromDb = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
         String fileName = fileService.uploadImage(path, image);
         productFromDb.setImage(fileName);

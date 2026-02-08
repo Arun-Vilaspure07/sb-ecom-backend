@@ -24,6 +24,7 @@ public class StripeServiceImpl implements StripeService {
     private String stripeApiKey;
 
     @PostConstruct
+    @SuppressWarnings("java:S2696")
     public void init(){
         Stripe.apiKey = stripeApiKey;
     }
