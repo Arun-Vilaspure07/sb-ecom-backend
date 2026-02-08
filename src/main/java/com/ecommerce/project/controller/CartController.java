@@ -6,7 +6,6 @@ import com.ecommerce.project.payload.CartItemDTO;
 import com.ecommerce.project.repositories.CartRepository;
 import com.ecommerce.project.service.CartService;
 import com.ecommerce.project.util.AuthUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +16,17 @@ import java.util.List;
 @RequestMapping("/api")
 public class CartController {
 
-    @Autowired
-    private CartRepository cartRepository;
+    private final CartRepository cartRepository;
+    private final AuthUtil authUtil;
+    private final CartService cartService;
 
-    @Autowired
-    private AuthUtil authUtil;
-
-    @Autowired
-    private CartService cartService;
+    public CartController(CartRepository cartRepository,
+                          AuthUtil authUtil,
+                          CartService cartService) {
+        this.cartRepository = cartRepository;
+        this.authUtil = authUtil;
+        this.cartService = cartService;
+    }
 
     @PostMapping("/cart/create")
     public ResponseEntity<String> createOrUpdateCart(@RequestBody List<CartItemDTO> cartItems){
