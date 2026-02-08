@@ -6,17 +6,10 @@ import com.stripe.model.PaymentIntent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 
 @Service
 @Profile("test")
-class StripeServiceImplTest implements StripeService {
-
-//    @Override
-//    public void charge(...) {
-//        // no-op or fake response
-//    }
+class StripeServiceTestImpl implements StripeService {
 
     @Override
     public PaymentIntent paymentIntent(StripePaymentDto stripePaymentDto) throws StripeException {
