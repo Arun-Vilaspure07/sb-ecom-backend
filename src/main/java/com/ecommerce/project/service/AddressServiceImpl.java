@@ -18,6 +18,7 @@ import java.util.List;
 public class AddressServiceImpl implements AddressService{
 
     private static final String ADDRESS_ENTITY = "Address";
+    private static final String ADDRESS_ID = "addressId";
 
     @Autowired
     private AddressRepository addressRepository;
@@ -52,7 +53,7 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public AddressDTO getAddressesById(Long addressId) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, "addressId", addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, ADDRESS_ID, addressId));
         return modelMapper.map(address, AddressDTO.class);
     }
 
@@ -67,7 +68,7 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
         Address addressFromDatabase = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, "addressId", addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, ADDRESS_ID, addressId));
 
         addressFromDatabase.setCity(addressDTO.getCity());
         addressFromDatabase.setPincode(addressDTO.getPincode());
@@ -89,7 +90,7 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public String deleteAddress(Long addressId) {
         Address addressFromDatabase = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, "addressId", addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ADDRESS_ENTITY, ADDRESS_ID, addressId));
 
         User user = addressFromDatabase.getUser();
         user.getAddresses().removeIf(address -> address.getAddressId().equals(addressId));

@@ -36,6 +36,10 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class AuthServiceImpl implements AuthService {
+    
+    public static final String ERROR_USERNAME_IS_ALREADY_TAKEN = "Error: Username is already taken!";
+    public static final String ERROR_EMAIL_IS_ALREADY_IN_USE = "Error: Email is already in use!";
+    public static final String ERROR_ROLE_IS_NOT_FOUND = "Error: Role is not found.";
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -79,11 +83,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseEntity<MessageResponse> register(SignupRequest signUpRequest) {
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+            return ResponseEntity.badRequest().body(new MessageResponse(ERROR_USERNAME_IS_ALREADY_TAKEN));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+            return ResponseEntity.badRequest().body(new MessageResponse(ERROR_EMAIL_IS_ALREADY_IN_USE));
         }
 
         // Create new user's account
@@ -96,26 +100,26 @@ public class AuthServiceImpl implements AuthService {
 
         if (strRoles == null) {
             Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseThrow(() -> new RuntimeException(ERROR_ROLE_IS_NOT_FOUND));
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role) {
                     case "admin":
                         Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RuntimeException(ERROR_ROLE_IS_NOT_FOUND));
                         roles.add(adminRole);
 
                         break;
                     case "seller":
                         Role modRole = roleRepository.findByRoleName(AppRole.ROLE_SELLER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RuntimeException(ERROR_ROLE_IS_NOT_FOUND));
                         roles.add(modRole);
 
                         break;
                     default:
                         Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RuntimeException(ERROR_ROLE_IS_NOT_FOUND));
                         roles.add(userRole);
                 }
             });
@@ -162,6 +166,4 @@ public class AuthServiceImpl implements AuthService {
         response.setLastPage(allUsers.isLast());
         return response;
     }
-
-
 }
