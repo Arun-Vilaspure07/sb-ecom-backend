@@ -8,6 +8,8 @@ import com.ecommerce.project.service.StripeService;
 import com.ecommerce.project.util.AuthUtil;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,19 +20,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
+    private static final Logger log = LoggerFactory.getLogger(OrderController.class);
+    private final OrderService orderService;
+    private final AuthUtil authUtil;
+    private final StripeService stripeService;
 
-    @Autowired
-    private AuthUtil authUtil;
-
-    @Autowired
-    private StripeService stripeService;
+    public OrderController(OrderService orderService,
+                           AuthUtil authUtil,
+                           StripeService stripeService) {
+        this.orderService = orderService;
+        this.authUtil = authUtil;
+        this.stripeService = stripeService;
+    }
 
     @PostMapping("/order/users/payments/{paymentMethod}")
     public ResponseEntity<OrderDTO> orderProducts(@PathVariable String paymentMethod, @RequestBody OrderRequestDTO orderRequestDTO) {
         String emailId = authUtil.loggedInEmail();
-        System.out.println("orderRequestDTO DATA: " + orderRequestDTO);
+        log.info("orderRequestDTO DATA: {}", orderRequestDTO);
         OrderDTO order = orderService.placeOrder(
                 emailId,
                 orderRequestDTO.getAddressId(),
@@ -45,7 +51,7 @@ public class OrderController {
 
     @PostMapping("/order/stripe-client-secret")
     public ResponseEntity<String> createStripeClientSecret(@RequestBody StripePaymentDto stripePaymentDto) throws StripeException {
-        System.out.println("StripePaymentDTO Received " + stripePaymentDto);
+        log.info("StripePaymentDTO Received {}", stripePaymentDto);
         PaymentIntent paymentIntent = stripeService.paymentIntent(stripePaymentDto);
         return new ResponseEntity<>(paymentIntent.getClientSecret(), HttpStatus.CREATED);
     }
