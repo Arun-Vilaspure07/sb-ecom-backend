@@ -1,0 +1,13 @@
+# Global owners (fallback)
+* @Arun-Vilaspure07
+
+# Backend core
+/src/main/java/com/ecommerce/project/service/ @Arun-Vilaspure07
+/src/main/java/com/ecommerce/project/controller/ @Arun-Vilaspure07
+/src/main/java/com/ecommerce/project/security/ @Arun-Vilaspure07
+
+# CI/CD
+/.github/workflows/ @Arun-Vilaspure07
+
+# Configs
+/application.yml @Arun-Vilaspure07

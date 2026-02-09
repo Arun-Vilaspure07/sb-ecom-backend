@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -204,5 +203,13 @@ public class OrderServiceImpl implements OrderService {
         return orderResponse;
     }
 
+    @Override
+    public OrderDTO updateOrderStatusBySeller(Long orderId, String status) {
 
+        // Example seller restrictions
+        if ("CANCELLED".equalsIgnoreCase(status)) {
+            throw new IllegalStateException("Seller cannot cancel orders");
+        }
+        return updateOrder(orderId, status);
+    }
 }

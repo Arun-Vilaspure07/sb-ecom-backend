@@ -17,14 +17,18 @@ import java.io.IOException;
 @RequestMapping("/api")
 public class ProductController {
 
-    @Autowired
-    ProductService productService;
+    private final ProductService productService;
+
+    // ✅ Constructor Injection (BEST PRACTICE)
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @PostMapping("/admin/categories/{categoryId}/product")
     public ResponseEntity<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO,
                                                  @PathVariable Long categoryId){
         ProductDTO savedProductDTO = productService.addProduct(categoryId, productDTO);
-        return new ResponseEntity<>(savedProductDTO, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedProductDTO);
     }
 
     @PostMapping("/seller/categories/{categoryId}/product")

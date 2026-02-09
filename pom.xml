@@ -19,10 +19,15 @@
 			<sonar.coverage.jacoco.xmlReportPaths>
 				target/site/jacoco/jacoco.xml
 			</sonar.coverage.jacoco.xmlReportPaths>
+
 		<sonar.projectKey>sb-ecom</sonar.projectKey>
 		<sonar.projectName>sb-ecom</sonar.projectName>
 		<sonar.host.url>http://localhost:9001</sonar.host.url>
 		<sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+        <sonar.coverage.exclusions>
+            **/config/**,**/dto/**,**/entity/**
+        </sonar.coverage.exclusions>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -158,23 +163,26 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
-
                 <executions>
-                    <!-- Prepare JaCoCo agent -->
                     <execution>
-                        <id>prepare-agent</id>
+                        <id>check</id>
                         <goals>
-                            <goal>prepare-agent</goal>
+                            <goal>check</goal>
                         </goals>
-                    </execution>
-
-                    <!-- Generate report -->
-                    <execution>
-                        <id>report</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
