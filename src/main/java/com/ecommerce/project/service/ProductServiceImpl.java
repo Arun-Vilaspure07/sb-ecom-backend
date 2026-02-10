@@ -112,7 +112,6 @@ public class ProductServiceImpl implements ProductService {
                 : Sort.by(sortBy).descending();
 
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
-//        Specification<Product> spec = Specification.where(null);
         Specification<Product> spec = (root, query, cb) -> cb.conjunction();
         if (keyword != null && !keyword.isEmpty()) {
             spec = spec.and((root, query, criteriaBuilder) ->
@@ -281,77 +280,156 @@ public class ProductServiceImpl implements ProductService {
         return productResponse;
     }
 
-    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
     @Override
-    public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
+    public ProductDTO updateProduct(Long productId, ProductDTO productDTO, String role) {
         Product productFromDb = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
-        Product product = modelMapper.map(productDTO, Product.class);
+        // 🔐 ROLE-BASED RULES
+        if ("SELLER".equalsIgnoreCase(role)) {
+            User loggedInUser = authUtil.loggedInUser();
 
-        productFromDb.setProductName(product.getProductName());
-        productFromDb.setDescription(product.getDescription());
-        productFromDb.setQuantity(product.getQuantity());
-        productFromDb.setDiscount(product.getDiscount());
-        productFromDb.setPrice(product.getPrice());
-        productFromDb.setSpecialPrice(product.getSpecialPrice());
+            if (!productFromDb.getUser().getUserId().equals(loggedInUser.getUserId())) {
+                throw new APIException("Seller not allowed to update this product");
+            }
+
+            // seller can update limited fields
+            productFromDb.setPrice(productDTO.getPrice());
+            productFromDb.setDiscount(productDTO.getDiscount());
+            productFromDb.setQuantity(productDTO.getQuantity());
+        }
+
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            // admin can update everything
+            productFromDb.setProductName(productDTO.getProductName());
+            productFromDb.setDescription(productDTO.getDescription());
+            productFromDb.setQuantity(productDTO.getQuantity());
+            productFromDb.setDiscount(productDTO.getDiscount());
+            productFromDb.setPrice(productDTO.getPrice());
+            productFromDb.setSpecialPrice(productDTO.getSpecialPrice());
+        }
 
         Product savedProduct = productRepository.save(productFromDb);
 
+        // 🔄 update carts
         List<Cart> carts = cartRepository.findCartsByProductId(productId);
-
-        List<CartDTO> cartDTOs = carts.stream().map(cart -> {
-            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-
-            List<ProductDTO> products = cart.getCartItems().stream()
-                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
-
-            cartDTO.setProducts(products);
-
-            return cartDTO;
-
-        }).collect(Collectors.toList());
-
-        cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));
+        carts.forEach(cart ->
+                cartService.updateProductInCarts(cart.getCartId(), productId)
+        );
 
         return modelMapper.map(savedProduct, ProductDTO.class);
     }
 
     @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
     @Override
-    public ProductDTO deleteProduct(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+    public ProductDTO deleteProduct(Long productId, String role) {
 
-        // DELETE
-        List<Cart> carts = cartRepository.findCartsByProductId(productId);
-        carts.forEach(cart -> cartService.deleteProductFromCart(cart.getCartId(), productId));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+
+        if ("SELLER".equalsIgnoreCase(role)) {
+            User loggedInUser = authUtil.loggedInUser();
+
+            if (!product.getUser().getUserId().equals(loggedInUser.getUserId())) {
+                throw new APIException("Seller not allowed to delete this product");
+            }
+        }
+
+        // ADMIN can delete anything (no extra check)
 
         productRepository.delete(product);
+
         return modelMapper.map(product, ProductDTO.class);
     }
 
     @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
     @Override
-    public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
-        Product productFromDb = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+    public ProductDTO updateProductImage(Long productId,
+                                         MultipartFile image,
+                                         String role) throws IOException {
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+
+        if ("SELLER".equalsIgnoreCase(role)) {
+            User loggedInUser = authUtil.loggedInUser();
+
+            if (!product.getUser().getUserId().equals(loggedInUser.getUserId())) {
+                throw new APIException("Seller not allowed to update product image");
+            }
+        }
+        // ADMIN can update any image
 
         String fileName = fileService.uploadImage(path, image);
-        productFromDb.setImage(fileName);
+        product.setImage(fileName);
 
-        Product updatedProduct = productRepository.save(productFromDb);
+        Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
 
-    public void badMethod() {
-        if (true) {
-            if (true) {
-                if (true) {
-                    System.out.println("Sonar should catch this");
-                }
-            }
-        }
-    }
+//    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
+//    @Override
+//    public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
+//        Product productFromDb = productRepository.findById(productId)
+//                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+//
+//        Product product = modelMapper.map(productDTO, Product.class);
+//
+//        productFromDb.setProductName(product.getProductName());
+//        productFromDb.setDescription(product.getDescription());
+//        productFromDb.setQuantity(product.getQuantity());
+//        productFromDb.setDiscount(product.getDiscount());
+//        productFromDb.setPrice(product.getPrice());
+//        productFromDb.setSpecialPrice(product.getSpecialPrice());
+//
+//        Product savedProduct = productRepository.save(productFromDb);
+//
+//        List<Cart> carts = cartRepository.findCartsByProductId(productId);
+//
+//        List<CartDTO> cartDTOs = carts.stream().map(cart -> {
+//            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+//
+//            List<ProductDTO> products = cart.getCartItems().stream()
+//                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+//
+//            cartDTO.setProducts(products);
+//
+//            return cartDTO;
+//
+//        }).collect(Collectors.toList());
+//
+//        cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));
+//
+//        return modelMapper.map(savedProduct, ProductDTO.class);
+//    }
 
+//    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
+//    @Override
+//    public ProductDTO deleteProduct(Long productId) {
+//        Product product = productRepository.findById(productId)
+//                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+//
+//        // DELETE
+//        List<Cart> carts = cartRepository.findCartsByProductId(productId);
+//        carts.forEach(cart -> cartService.deleteProductFromCart(cart.getCartId(), productId));
+//
+//        productRepository.delete(product);
+//        return modelMapper.map(product, ProductDTO.class);
+//    }
+
+//    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
+//    @Override
+//    public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+//        Product productFromDb = productRepository.findById(productId)
+//                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
+//
+//        String fileName = fileService.uploadImage(path, image);
+//        productFromDb.setImage(fileName);
+//
+//        Product updatedProduct = productRepository.save(productFromDb);
+//        return modelMapper.map(updatedProduct, ProductDTO.class);
+//    }
 }

@@ -73,20 +73,20 @@ public class ProductController {
     @PutMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDTO> updateProduct(@Valid @RequestBody ProductDTO productDTO,
                                                     @PathVariable Long productId){
-        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
+        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO, "ADMIN");
         return new ResponseEntity<>(updatedProductDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
-        ProductDTO deletedProduct = productService.deleteProduct(productId);
+        ProductDTO deletedProduct = productService.deleteProduct(productId,"ADMIN");
         return new ResponseEntity<>(deletedProduct, HttpStatus.OK);
     }
 
     @PutMapping("/admin/products/{productId}/image")
     public ResponseEntity<ProductDTO> updateProductImage(@PathVariable Long productId,
                                                          @RequestParam("image")MultipartFile image) throws IOException {
-        ProductDTO updatedProduct = productService.updateProductImage(productId, image);
+        ProductDTO updatedProduct = productService.updateProductImage(productId, image,"ADMIN");
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
@@ -117,20 +117,20 @@ public class ProductController {
     @PutMapping("/seller/products/{productId}")
     public ResponseEntity<ProductDTO> updateProductSeller(@Valid @RequestBody ProductDTO productDTO,
                                                     @PathVariable Long productId){
-        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
+        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO, "SELLER");
         return new ResponseEntity<>(updatedProductDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/seller/products/{productId}")
     public ResponseEntity<ProductDTO> deleteProductSeller(@PathVariable Long productId){
-        ProductDTO deletedProduct = productService.deleteProduct(productId);
+        ProductDTO deletedProduct = productService.deleteProduct(productId,"SELLER");
         return new ResponseEntity<>(deletedProduct, HttpStatus.OK);
     }
 
     @PutMapping("/seller/products/{productId}/image")
     public ResponseEntity<ProductDTO> updateProductImageSeller(@PathVariable Long productId,
                                                          @RequestParam("image")MultipartFile image) throws IOException {
-        ProductDTO updatedProduct = productService.updateProductImage(productId, image);
+        ProductDTO updatedProduct = productService.updateProductImage(productId, image,"SELLER");
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 }
