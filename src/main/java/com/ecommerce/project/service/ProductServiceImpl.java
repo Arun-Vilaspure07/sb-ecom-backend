@@ -6,7 +6,6 @@ import com.ecommerce.project.model.Cart;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.model.Product;
 import com.ecommerce.project.model.User;
-import com.ecommerce.project.payload.CartDTO;
 import com.ecommerce.project.payload.ProductDTO;
 import com.ecommerce.project.payload.ProductResponse;
 import com.ecommerce.project.repositories.CartRepository;
@@ -15,7 +14,6 @@ import com.ecommerce.project.repositories.ProductRepository;
 import com.ecommerce.project.util.AuthUtil;
 import com.ecommerce.project.util.CacheNames;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional   // ✅ ADD THIS LINE
@@ -38,36 +35,33 @@ public class ProductServiceImpl implements ProductService {
 
     private static final String PRODUCT_ENTITY = "Product";
     private static final String PRODUCT_ID_FIELD = "productId";
-
     private static final String CATEGORY_ENTITY = "Category";
     private static final String CATEGORY_ID_FIELD = "categoryId";
+    private static final String SELLER = "SELLER";
 
-    @Autowired
-    private CartRepository cartRepository;
-
-    @Autowired
-    private CartService cartService;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
-    private FileService fileService;
-
-    @Autowired
-    AuthUtil authUtil;
+    private final CartRepository cartRepository;
+    private final CartService cartService;
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final ModelMapper modelMapper;
+    private final FileService fileService;
+    private final AuthUtil authUtil;
 
     @Value("${project.image}")
     private String path;
 
     @Value("${image.base.url}")
     private String imageBaseUrl;
+
+    public ProductServiceImpl(CartRepository cartRepository, CartService cartService, ProductRepository productRepository, CategoryRepository categoryRepository, ModelMapper modelMapper, FileService fileService, AuthUtil authUtil) {
+        this.cartRepository = cartRepository;
+        this.cartService = cartService;
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.modelMapper = modelMapper;
+        this.fileService = fileService;
+        this.authUtil = authUtil;
+    }
 
     @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
     @Override
@@ -287,7 +281,7 @@ public class ProductServiceImpl implements ProductService {
                         new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
         // 🔐 ROLE-BASED RULES
-        if ("SELLER".equalsIgnoreCase(role)) {
+        if (SELLER.equalsIgnoreCase(role)) {
             User loggedInUser = authUtil.loggedInUser();
 
             if (!productFromDb.getUser().getUserId().equals(loggedInUser.getUserId())) {
@@ -329,7 +323,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
-        if ("SELLER".equalsIgnoreCase(role)) {
+        if (SELLER.equalsIgnoreCase(role)) {
             User loggedInUser = authUtil.loggedInUser();
 
             if (!product.getUser().getUserId().equals(loggedInUser.getUserId())) {
@@ -354,7 +348,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
-        if ("SELLER".equalsIgnoreCase(role)) {
+        if (SELLER.equalsIgnoreCase(role)) {
             User loggedInUser = authUtil.loggedInUser();
 
             if (!product.getUser().getUserId().equals(loggedInUser.getUserId())) {
@@ -369,67 +363,4 @@ public class ProductServiceImpl implements ProductService {
         Product updatedProduct = productRepository.save(product);
         return modelMapper.map(updatedProduct, ProductDTO.class);
     }
-
-//    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
-//    @Override
-//    public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
-//        Product productFromDb = productRepository.findById(productId)
-//                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
-//
-//        Product product = modelMapper.map(productDTO, Product.class);
-//
-//        productFromDb.setProductName(product.getProductName());
-//        productFromDb.setDescription(product.getDescription());
-//        productFromDb.setQuantity(product.getQuantity());
-//        productFromDb.setDiscount(product.getDiscount());
-//        productFromDb.setPrice(product.getPrice());
-//        productFromDb.setSpecialPrice(product.getSpecialPrice());
-//
-//        Product savedProduct = productRepository.save(productFromDb);
-//
-//        List<Cart> carts = cartRepository.findCartsByProductId(productId);
-//
-//        List<CartDTO> cartDTOs = carts.stream().map(cart -> {
-//            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-//
-//            List<ProductDTO> products = cart.getCartItems().stream()
-//                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
-//
-//            cartDTO.setProducts(products);
-//
-//            return cartDTO;
-//
-//        }).collect(Collectors.toList());
-//
-//        cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));
-//
-//        return modelMapper.map(savedProduct, ProductDTO.class);
-//    }
-
-//    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
-//    @Override
-//    public ProductDTO deleteProduct(Long productId) {
-//        Product product = productRepository.findById(productId)
-//                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
-//
-//        // DELETE
-//        List<Cart> carts = cartRepository.findCartsByProductId(productId);
-//        carts.forEach(cart -> cartService.deleteProductFromCart(cart.getCartId(), productId));
-//
-//        productRepository.delete(product);
-//        return modelMapper.map(product, ProductDTO.class);
-//    }
-
-//    @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
-//    @Override
-//    public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
-//        Product productFromDb = productRepository.findById(productId)
-//                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
-//
-//        String fileName = fileService.uploadImage(path, image);
-//        productFromDb.setImage(fileName);
-//
-//        Product updatedProduct = productRepository.save(productFromDb);
-//        return modelMapper.map(updatedProduct, ProductDTO.class);
-//    }
 }

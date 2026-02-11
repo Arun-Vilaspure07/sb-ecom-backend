@@ -12,7 +12,6 @@ import com.ecommerce.project.repositories.*;
 import com.ecommerce.project.util.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,35 +26,29 @@ import java.util.List;
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    @Autowired
-    CartRepository cartRepository;
+    private final CartRepository cartRepository;
+    private final AddressRepository addressRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
+    private final CartService cartService;
+    private final ModelMapper modelMapper;
+    private final ProductRepository productRepository;
+    private final AuthUtil authUtil;
+    private final OrderEventProducer orderEventProducer;
 
-    @Autowired
-    AddressRepository addressRepository;
-
-    @Autowired
-    OrderItemRepository orderItemRepository;
-
-    @Autowired
-    OrderRepository orderRepository;
-
-    @Autowired
-    PaymentRepository paymentRepository;
-
-    @Autowired
-    CartService cartService;
-
-    @Autowired
-    ModelMapper modelMapper;
-
-    @Autowired
-    ProductRepository productRepository;
-
-    @Autowired
-    AuthUtil authUtil;
-
-    @Autowired
-    private OrderEventProducer orderEventProducer;
+    public OrderServiceImpl(CartRepository cartRepository, AddressRepository addressRepository, OrderItemRepository orderItemRepository, OrderRepository orderRepository, PaymentRepository paymentRepository, CartService cartService, ModelMapper modelMapper, ProductRepository productRepository, AuthUtil authUtil, OrderEventProducer orderEventProducer) {
+        this.cartRepository = cartRepository;
+        this.addressRepository = addressRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.orderRepository = orderRepository;
+        this.paymentRepository = paymentRepository;
+        this.cartService = cartService;
+        this.modelMapper = modelMapper;
+        this.productRepository = productRepository;
+        this.authUtil = authUtil;
+        this.orderEventProducer = orderEventProducer;
+    }
 
 
     @Override
