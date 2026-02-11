@@ -163,7 +163,29 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+
                 <executions>
+
+                    <!-- 1️⃣ Attach JaCoCo agent before tests run -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- 2️⃣ Generate XML + HTML coverage report after tests -->
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- 3️⃣ OPTIONAL: Coverage check (DISABLED for SonarCloud Free)
+                         Sonar already enforces coverage via Quality Gate -->
+
                     <execution>
                         <id>check</id>
                         <goals>
@@ -184,6 +206,7 @@
                             </rules>
                         </configuration>
                     </execution>
+
                 </executions>
             </plugin>
 

@@ -34,6 +34,7 @@ public class WebSecurityConfig {
 
 
     private final AuthEntryPointJwt unauthorizedHandler;
+    private final AuthTokenFilter authTokenFilter; // ✅ ADD THIS
 
     @Value("${app.bootstrap.user-password}")
     private String userPassword;
@@ -44,13 +45,10 @@ public class WebSecurityConfig {
     @Value("${app.bootstrap.admin-password}")
     private String adminPassword;
 
-    public WebSecurityConfig(AuthEntryPointJwt unauthorizedHandler) {
+    public WebSecurityConfig(AuthEntryPointJwt unauthorizedHandler,
+                             AuthTokenFilter authTokenFilter) { // ✅ ADD
         this.unauthorizedHandler = unauthorizedHandler;
-    }
-
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
+        this.authTokenFilter = authTokenFilter;
     }
 
     @Bean
@@ -87,8 +85,7 @@ public class WebSecurityConfig {
                                 .anyRequest().authenticated()
                 );
 
-        http.addFilterBefore(authenticationJwtTokenFilter(),
-                UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(authTokenFilter,UsernamePasswordAuthenticationFilter.class);
 
         http.headers(headers ->
                 headers.frameOptions(FrameOptionsConfig::sameOrigin));

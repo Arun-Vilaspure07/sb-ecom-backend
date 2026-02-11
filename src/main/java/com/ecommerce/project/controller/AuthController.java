@@ -2,7 +2,6 @@ package com.ecommerce.project.controller;
 
 import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.payload.AuthenticationResult;
-import com.ecommerce.project.payload.UserDTO;
 import com.ecommerce.project.payload.UserResponse;
 import com.ecommerce.project.security.request.LoginRequest;
 import com.ecommerce.project.security.request.SignupRequest;
