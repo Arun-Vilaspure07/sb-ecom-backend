@@ -140,6 +140,7 @@ public class WebSecurityConfig {
         };
     }
 
+    @SuppressWarnings("java:S5411")
     private void createUserIfMissing(UserRepository repo,
                                      PasswordEncoder encoder,
                                      String username,
