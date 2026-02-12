@@ -16,9 +16,17 @@
 	<properties>
 		<java.version>17</java.version>
 
-			<sonar.coverage.jacoco.xmlReportPaths>
-				target/site/jacoco/jacoco.xml
-			</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+
+        <sonar.coverage.exclusions>
+                **/config/**,
+                **/security/**,
+                **/model/**,
+                **/dto/**,
+                **/exception/**
+        </sonar.coverage.exclusions>
 
 		<sonar.projectKey>sb-ecom</sonar.projectKey>
 		<sonar.projectName>sb-ecom</sonar.projectName>
