@@ -92,8 +92,12 @@ class OrderServiceImplTest {
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        // ✅ FIX: initialize orderItems to avoid NullPointerException
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderItems(new ArrayList<>());
+
         when(modelMapper.map(any(Order.class), eq(OrderDTO.class)))
-                .thenReturn(new OrderDTO());
+                .thenReturn(orderDTO);
 
         when(modelMapper.map(any(OrderItem.class), eq(OrderItemDTO.class)))
                 .thenReturn(new OrderItemDTO());
