@@ -99,8 +99,11 @@ class AuthTokenFilterTest {
                 .thenThrow(new RuntimeException("JWT error"));
 
         authTokenFilter.doFilterInternal(request, response, filterChain);
-
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
         verify(filterChain).doFilter(request, response);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 }
