@@ -5,10 +5,12 @@ import com.ecommerce.project.model.Category;
 import com.ecommerce.project.model.Product;
 import com.ecommerce.project.model.User;
 import com.ecommerce.project.payload.ProductDTO;
+import com.ecommerce.project.payload.ProductResponse;
 import com.ecommerce.project.repositories.CartRepository;
 import com.ecommerce.project.repositories.CategoryRepository;
 import com.ecommerce.project.repositories.ProductRepository;
 import com.ecommerce.project.util.AuthUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +19,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -188,5 +194,185 @@ class ProductServiceImplTest {
                 productService.updateProductImage(1L, file, "ADMIN");
 
         assertNotNull(dto);
+    }
+
+    @Test
+    void shouldGetAllProductsWithKeywordAndCategory() {
+        Product product = new Product();
+        product.setImage("img.png");
+
+        Page<Product> page = new PageImpl<>(List.of(product));
+
+        when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+
+        when(modelMapper.map(any(Product.class), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductResponse response =
+                productService.getAllProducts(
+                        0, 5, "price", "desc", "phone", "Electronics");
+
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
+    }
+
+    @Test
+    void shouldGetAllProductsForAdmin() {
+        Product product = new Product();
+        product.setImage("img.png");
+
+        Page<Product> page =
+                new org.springframework.data.domain.PageImpl<>(List.of(product));
+
+        when(productRepository.findAll(any(Pageable.class)))
+                .thenReturn(page);
+        when(modelMapper.map(any(Product.class), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductResponse response =
+                productService.getAllProductsForAdmin(0, 5, "price", "asc");
+
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
+    }
+
+    @Test
+    void shouldGetAllProductsForSeller() {
+        User seller = new User();
+        seller.setUserId(1L);
+
+        Product product = new Product();
+        product.setImage("img.png");
+
+        Page<Product> page =
+                new org.springframework.data.domain.PageImpl<>(List.of(product));
+
+        when(authUtil.loggedInUser()).thenReturn(seller);
+        when(productRepository.findByUser(eq(seller), any()))
+                .thenReturn(page);
+        when(modelMapper.map(any(Product.class), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductResponse response =
+                productService.getAllProductsForSeller(0, 5, "price", "asc");
+
+        assertNotNull(response);
+    }
+
+    @Test
+    void shouldSearchByCategorySuccessfully() {
+        Category category = new Category();
+
+        Product product = new Product();
+
+        Page<Product> page =
+                new org.springframework.data.domain.PageImpl<>(List.of(product));
+
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.of(category));
+        when(productRepository.findByCategoryOrderByPriceAsc(any(), any()))
+                .thenReturn(page);
+        when(modelMapper.map(any(Product.class), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductResponse response =
+                productService.searchByCategory(1L, 0, 5, "price", "asc");
+
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
+    }
+
+    @Test
+    void shouldSearchProductByKeywordSuccessfully() {
+        Product product = new Product();
+
+        Page<Product> page =
+                new org.springframework.data.domain.PageImpl<>(List.of(product));
+
+        when(productRepository.findByProductNameLikeIgnoreCase(any(), any()))
+                .thenReturn(page);
+        when(modelMapper.map(any(Product.class), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductResponse response =
+                productService.searchProductByKeyword("phone", 0, 5, "price", "asc");
+
+        assertNotNull(response);
+        assertEquals(1, response.getContent().size());
+    }
+
+    @Test
+    void sellerCanUpdateOwnProduct() {
+        User seller = new User();
+        seller.setUserId(1L);
+
+        Product product = new Product();
+        product.setUser(seller);
+
+        when(authUtil.loggedInUser()).thenReturn(seller);
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+        when(productRepository.save(any()))
+                .thenReturn(product);
+        when(cartRepository.findCartsByProductId(1L))
+                .thenReturn(List.of());
+        when(modelMapper.map(any(), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductDTO result =
+                productService.updateProduct(1L, new ProductDTO(), "SELLER");
+
+        assertNotNull(result);
+    }
+
+    @Test
+    void adminCanDeleteProduct() {
+        Product product = new Product();
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+        when(modelMapper.map(any(), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductDTO result =
+                productService.deleteProduct(1L, "ADMIN");
+
+        assertNotNull(result);
+        verify(productRepository).delete(product);
+    }
+
+    @Test
+    void sellerCanUpdateOwnProductImage() throws Exception {
+        User seller = new User();
+        seller.setUserId(1L);
+
+        Product product = new Product();
+        product.setUser(seller);
+
+        MultipartFile file = Mockito.mock(MultipartFile.class);
+
+        when(authUtil.loggedInUser()).thenReturn(seller);
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+        when(fileService.uploadImage(any(), any()))
+                .thenReturn("img.png");
+        when(productRepository.save(any()))
+                .thenReturn(product);
+        when(modelMapper.map(any(), eq(ProductDTO.class)))
+                .thenReturn(new ProductDTO());
+
+        ProductDTO result =
+                productService.updateProductImage(1L, file, "SELLER");
+
+        assertNotNull(result);
+    }
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(
+                productService,
+                "imageBaseUrl",
+                "http://localhost/images"
+        );
     }
 }
