@@ -28,7 +28,6 @@ jobs:
 
       - name: Build, Test & Sonar
         run: |
-          cd sb-ecom
           mvn clean verify sonar:sonar \
             -Dsonar.projectKey=Arun-Vilaspure07_sb-ecom-backend \
             -Dsonar.organization=arun-vilaspure07 \
