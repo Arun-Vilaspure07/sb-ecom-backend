@@ -11,25 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven
 
-      - name: Build, Test & SonarCloud Scan
+      - name: Build, Test & Sonar
         working-directory: sb-ecom
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -38,9 +35,4 @@ jobs:
             -Dsonar.projectKey=Arun-Vilaspure07_sb-ecom-backend \
             -Dsonar.organization=arun-vilaspure07 \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.java.binaries=sb-ecom/target/classes \
-            -Dsonar.qualitygate.wait=false
-
-      - name: Build Docker Image
-        run: docker build -t sb-ecom:${{ github.run_number }} .
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
