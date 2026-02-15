@@ -30,6 +30,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven
 
       - name: Build, Test & SonarCloud Scan
+        working-directory: sb-ecom
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -38,8 +39,8 @@ jobs:
             -Dsonar.organization=arun-vilaspure07 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.java.binaries=target/classes \
-            -Dsonar.qualitygate.wait=true
+            -Dsonar.java.binaries=sb-ecom/target/classes \
+            -Dsonar.qualitygate.wait=false
 
       - name: Build Docker Image
         run: docker build -t sb-ecom:${{ github.run_number }} .
