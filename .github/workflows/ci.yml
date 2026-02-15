@@ -27,16 +27,11 @@ jobs:
           restore-keys: ${{ runner.os }}-maven
 
       - name: Build, Test & Sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn clean verify sonar:sonar \
             -Dsonar.projectKey=Arun-Vilaspure07_sb-ecom-backend \
             -Dsonar.organization=arun-vilaspure07 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Debug workspace
-        run: |
-          pwd
-          ls -la
