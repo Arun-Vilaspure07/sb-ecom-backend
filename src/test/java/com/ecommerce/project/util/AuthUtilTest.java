@@ -59,8 +59,7 @@ class AuthUtilTest {
         when(userRepository.findByUserName("unknown"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class,
-                () -> authUtil.loggedInEmail());
+        assertThrows(UsernameNotFoundException.class, authUtil::loggedInEmail);
     }
 
     // ---------- loggedInUserId ----------

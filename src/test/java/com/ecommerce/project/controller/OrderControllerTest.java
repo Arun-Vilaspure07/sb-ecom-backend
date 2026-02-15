@@ -131,9 +131,7 @@ class OrderControllerTest {
 
         OrderDTO orderDTO = new OrderDTO();
 
-        Mockito.when(orderService.updateOrder(
-                        Mockito.eq(1L),
-                        Mockito.eq("DELIVERED")))
+        Mockito.when(orderService.updateOrder(1L, "DELIVERED"))
                 .thenReturn(orderDTO);
 
         mockMvc.perform(put("/api/admin/orders/{orderId}/status", 1L)
@@ -150,9 +148,7 @@ class OrderControllerTest {
 
         OrderDTO orderDTO = new OrderDTO();
 
-        Mockito.when(orderService.updateOrderStatusBySeller(
-                        Mockito.eq(1L),
-                        Mockito.eq("SHIPPED")))
+        Mockito.when(orderService.updateOrderStatusBySeller(1L, "SHIPPED"))
                 .thenReturn(orderDTO);
 
         mockMvc.perform(put("/api/seller/orders/{orderId}/status", 1L)

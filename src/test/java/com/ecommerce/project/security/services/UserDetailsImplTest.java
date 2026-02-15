@@ -59,8 +59,9 @@ class UserDetailsImplTest {
         UserDetailsImpl user2 =
                 new UserDetailsImpl(1L, "user2", "b", "p", List.of());
 
-        assertThat(user1).isEqualTo(user2);
-        assertThat(user1.hashCode()).isEqualTo(user2.hashCode());
+        assertThat(user1)
+                .isEqualTo(user2)
+                .hasSameHashCodeAs(user2);
     }
 
     @Test
@@ -79,8 +80,9 @@ class UserDetailsImplTest {
         UserDetailsImpl user =
                 new UserDetailsImpl(1L, "user", "a", "p", List.of());
 
-        assertThat(user).isNotEqualTo(null);
-        assertThat(user).isNotEqualTo("some-string");
+        assertThat(user)
+                .isNotNull()
+                .isNotEqualTo("some-string");
     }
 
     @Test

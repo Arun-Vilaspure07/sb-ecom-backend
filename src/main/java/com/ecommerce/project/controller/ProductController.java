@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import static com.ecommerce.project.config.AppConstants.ROLE_ADMIN;
 
 import java.io.IOException;
 
@@ -73,20 +74,20 @@ public class ProductController {
     @PutMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDTO> updateProduct(@Valid @RequestBody ProductDTO productDTO,
                                                     @PathVariable Long productId){
-        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO, "ADMIN");
+        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO, ROLE_ADMIN );
         return new ResponseEntity<>(updatedProductDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
-        ProductDTO deletedProduct = productService.deleteProduct(productId,"ADMIN");
+        ProductDTO deletedProduct = productService.deleteProduct(productId,ROLE_ADMIN );
         return new ResponseEntity<>(deletedProduct, HttpStatus.OK);
     }
 
     @PutMapping("/admin/products/{productId}/image")
     public ResponseEntity<ProductDTO> updateProductImage(@PathVariable Long productId,
                                                          @RequestParam("image")MultipartFile image) throws IOException {
-        ProductDTO updatedProduct = productService.updateProductImage(productId, image,"ADMIN");
+        ProductDTO updatedProduct = productService.updateProductImage(productId, image,ROLE_ADMIN );
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
