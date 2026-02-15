@@ -145,8 +145,10 @@ class ProductServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(authUtil.loggedInUser()).thenReturn(loggedIn);
 
-        assertThrows(APIException.class, () ->
-                productService.updateProduct(1L, new ProductDTO(), "SELLER"));
+        ProductDTO dto = new ProductDTO();
+
+        assertThrows(APIException.class,
+                () -> productService.updateProduct(1L, dto, "SELLER"));
     }
 
     @Test

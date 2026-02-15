@@ -68,7 +68,11 @@ class MyGlobalExceptionHandlerTest {
     static class TestController {
 
         @PostMapping("/test/validation")
-        public void validation(@Valid @RequestBody TestRequest request) {}
+        public void validation(@Valid @RequestBody TestRequest request) {
+            // Intentionally empty:
+            // Used only to trigger MethodArgumentNotValidException
+            // for testing MyGlobalExceptionHandler
+        }
 
         @PostMapping("/test/resource-not-found")
         public void resourceNotFound() {

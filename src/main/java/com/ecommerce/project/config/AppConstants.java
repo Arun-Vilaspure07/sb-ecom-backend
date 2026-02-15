@@ -19,4 +19,5 @@ public final class AppConstants {
 
     // Roles
     public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_SELLER = "SELLER";
 }

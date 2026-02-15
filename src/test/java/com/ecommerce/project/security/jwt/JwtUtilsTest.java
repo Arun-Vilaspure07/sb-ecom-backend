@@ -58,11 +58,11 @@ class JwtUtilsTest {
     }
 
     @Test
-    void validateJwtToken_shouldReturnFalse_forExpiredToken() throws InterruptedException {
-        ReflectionTestUtils.setField(jwtUtils, "jwtExpirationMs", 1);
+    void validateJwtToken_shouldReturnFalse_forExpiredToken() {
+        // Force immediate expiration
+        ReflectionTestUtils.setField(jwtUtils, "jwtExpirationMs", 0);
 
         String token = jwtUtils.generateTokenFromUsername("expiredUser");
-        Thread.sleep(5);
 
         boolean isValid = jwtUtils.validateJwtToken(token);
 
