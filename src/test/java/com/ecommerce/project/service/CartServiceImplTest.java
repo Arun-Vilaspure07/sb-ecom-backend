@@ -209,4 +209,195 @@ class CartServiceImplTest {
         assertEquals("Cart created/updated with the new items successfully", result);
         verify(cartItemRepository).save(any(CartItem.class));
     }
+
+    @Test
+    void addProductToCart_productAlreadyInCart() {
+        Product product = new Product();
+        product.setProductId(1L);
+        product.setProductName("Phone");
+
+        Cart cart = new Cart();
+        cart.setCartId(1L);
+
+        when(authUtil.loggedInEmail()).thenReturn("test@mail.com");
+        when(cartRepository.findCartByEmail(anyString())).thenReturn(cart);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(cartItemRepository.findCartItemByProductIdAndCartId(anyLong(), anyLong()))
+                .thenReturn(new CartItem());
+
+        APIException ex = assertThrows(
+                APIException.class,
+                () -> cartService.addProductToCart(1L, 1)
+        );
+
+        assertTrue(ex.getMessage().contains("already exists"));
+    }
+
+    @Test
+    void addProductToCart_productOutOfStock() {
+        Product product = new Product();
+        product.setQuantity(0);
+        product.setProductName("Phone");
+
+        when(authUtil.loggedInEmail()).thenReturn("test@mail.com");
+        when(cartRepository.findCartByEmail(anyString())).thenReturn(new Cart());
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
+
+        APIException ex = assertThrows(
+                APIException.class,
+                () -> cartService.addProductToCart(1L, 1)
+        );
+
+        assertTrue(ex.getMessage().contains("not available"));
+    }
+
+    @Test
+    void getCart_success() {
+        Cart cart = new Cart();
+        cart.setCartId(1L);
+
+        CartItem item = new CartItem();
+        Product product = new Product();
+        item.setProduct(product);
+        item.setQuantity(2);
+        cart.setCartItems(List.of(item));
+
+        when(cartRepository.findCartByEmailAndCartId(anyString(), anyLong()))
+                .thenReturn(cart);
+        when(modelMapper.map(any(Cart.class), eq(CartDTO.class)))
+                .thenReturn(new CartDTO());
+
+        CartDTO dto = cartService.getCart("test@mail.com", 1L);
+
+        assertNotNull(dto);
+    }
+
+    @Test
+    void updateProductQuantityInCart_cartItemNotFound() {
+        Cart cart = new Cart();
+        cart.setCartId(1L);
+
+        Product product = new Product();
+        product.setQuantity(10);
+
+        when(authUtil.loggedInEmail()).thenReturn("test@mail.com");
+        when(cartRepository.findCartByEmail(anyString())).thenReturn(cart);
+        when(cartRepository.findById(anyLong())).thenReturn(Optional.of(cart));
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
+        when(cartItemRepository.findCartItemByProductIdAndCartId(anyLong(), anyLong()))
+                .thenReturn(null);
+
+        assertThrows(
+                APIException.class,
+                () -> cartService.updateProductQuantityInCart(1L, 1)
+        );
+    }
+
+    @Test
+    void updateProductQuantityInCart_quantityBecomesZero() {
+        Cart cart = new Cart();
+        cart.setCartId(1L);
+        cart.setTotalPrice(100.0);
+
+        Product product = new Product();
+        product.setProductId(1L);
+        product.setProductName("Phone");
+        product.setQuantity(10);
+        product.setSpecialPrice(100.0);
+        product.setDiscount(0.0);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setCartItemId(1L);
+        cartItem.setQuantity(1);
+        cartItem.setProduct(product);   // 🔴 REQUIRED
+        cartItem.setCart(cart);
+
+        when(authUtil.loggedInEmail()).thenReturn("test@mail.com");
+        when(cartRepository.findCartByEmail(anyString())).thenReturn(cart);
+        when(cartRepository.findById(anyLong())).thenReturn(Optional.of(cart));
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
+        when(cartItemRepository.findCartItemByProductIdAndCartId(anyLong(), anyLong()))
+                .thenReturn(cartItem);
+
+        // 🔥 REQUIRED STUBS
+        when(modelMapper.map(any(Cart.class), eq(CartDTO.class)))
+                .thenReturn(new CartDTO());
+
+        when(cartItemRepository.save(any(CartItem.class)))
+                .thenReturn(cartItem);
+
+        CartDTO result = cartService.updateProductQuantityInCart(1L, -1);
+
+        assertNotNull(result);
+
+        verify(cartItemRepository)
+                .deleteCartItemByProductIdAndCartId(anyLong(), anyLong());
+    }
+
+    @Test
+    void deleteProductFromCart_itemNotFound() {
+        when(cartRepository.findById(anyLong())).thenReturn(Optional.of(new Cart()));
+        when(cartItemRepository.findCartItemByProductIdAndCartId(anyLong(), anyLong()))
+                .thenReturn(null);
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> cartService.deleteProductFromCart(1L, 1L)
+        );
+    }
+
+    @Test
+    void updateProductInCarts_success() {
+        Cart cart = new Cart();
+        cart.setTotalPrice(500.0);
+
+        Product product = new Product();
+        product.setSpecialPrice(100.0);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setQuantity(2);
+        cartItem.setProductPrice(200.0);
+
+        when(cartRepository.findById(anyLong())).thenReturn(Optional.of(cart));
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
+        when(cartItemRepository.findCartItemByProductIdAndCartId(anyLong(), anyLong()))
+                .thenReturn(cartItem);
+
+        cartService.updateProductInCarts(1L, 1L);
+
+        verify(cartItemRepository).save(cartItem);
+    }
+
+    @Test
+    void createCart_existingCartReturned() {
+        Cart existingCart = new Cart();
+        existingCart.setCartId(10L);
+        existingCart.setTotalPrice(0.0);
+
+        Product product = new Product();
+        product.setProductId(1L);
+        product.setProductName("Laptop");
+        product.setQuantity(10);
+        product.setSpecialPrice(1000.0);
+        product.setDiscount(10.0);
+
+        when(authUtil.loggedInEmail()).thenReturn("test@mail.com");
+
+        // Existing cart path
+        when(cartRepository.findCartByEmail(anyString())).thenReturn(existingCart);
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product)); // 🔥 FIX
+
+        when(cartItemRepository.findCartItemByProductIdAndCartId(anyLong(), anyLong()))
+                .thenReturn(null);
+
+        when(modelMapper.map(any(Cart.class), eq(CartDTO.class)))
+                .thenReturn(new CartDTO());
+
+        CartDTO dto = cartService.addProductToCart(1L, 1);
+
+        assertNotNull(dto);
+        verify(cartRepository, never()).save(argThat(cart -> cart.getCartId() == null));
+    }
 }
