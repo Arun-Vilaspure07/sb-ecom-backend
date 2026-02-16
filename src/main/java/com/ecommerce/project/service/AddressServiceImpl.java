@@ -7,10 +7,8 @@ import com.ecommerce.project.payload.AddressDTO;
 import com.ecommerce.project.repositories.AddressRepository;
 import com.ecommerce.project.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Transactional
@@ -20,24 +18,21 @@ public class AddressServiceImpl implements AddressService{
     private static final String ADDRESS_ENTITY = "Address";
     private static final String ADDRESS_ID = "addressId";
 
-    @Autowired
-    private AddressRepository addressRepository;
+    private final AddressRepository addressRepository;
+    private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
-    UserRepository userRepository;
-
+    public AddressServiceImpl(AddressRepository addressRepository,ModelMapper modelMapper,UserRepository userRepository){
+        this.addressRepository=addressRepository;
+        this.modelMapper=modelMapper;
+        this.userRepository=userRepository;
+    }
 
     @Override
     @Transactional
     public AddressDTO createAddress(AddressDTO addressDTO, User user) {
         Address address = modelMapper.map(addressDTO, Address.class);
         address.setUser(user);
-//        List<Address> addressesList = user.getAddresses();
-//        addressesList.add(address);
-//        user.setAddresses(addressesList);
         Address savedAddress = addressRepository.save(address);
         return modelMapper.map(savedAddress, AddressDTO.class);
     }

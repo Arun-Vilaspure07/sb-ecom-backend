@@ -2,7 +2,6 @@ package com.ecommerce.project.util;
 
 import com.ecommerce.project.model.User;
 import com.ecommerce.project.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,8 +12,11 @@ public class AuthUtil {
 
     private static final String USER_NOT_FOUND_MSG = "User Not Found with username: ";
 
-    @Autowired
-    UserRepository userRepository;
+    private  final UserRepository userRepository;
+
+    public AuthUtil(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public String loggedInEmail(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

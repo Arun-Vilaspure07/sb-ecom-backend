@@ -16,13 +16,14 @@
 	<properties>
 		<java.version>17</java.version>
 
-			<sonar.coverage.jacoco.xmlReportPaths>
-				target/site/jacoco/jacoco.xml
-			</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
 		<sonar.projectKey>sb-ecom</sonar.projectKey>
 		<sonar.projectName>sb-ecom</sonar.projectName>
 		<sonar.host.url>http://localhost:9001</sonar.host.url>
 		<sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -101,44 +102,36 @@
 			<version>0.12.5</version>
 			<scope>runtime</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>net.logstash.logback</groupId>
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>7.4</version>
 		</dependency>
-
 	</dependencies>
 
 	<build>
@@ -160,7 +153,8 @@
                 <version>0.8.11</version>
 
                 <executions>
-                    <!-- Prepare JaCoCo agent -->
+
+                    <!-- 1️⃣ Attach JaCoCo agent before tests run -->
                     <execution>
                         <id>prepare-agent</id>
                         <goals>
@@ -168,14 +162,39 @@
                         </goals>
                     </execution>
 
-                    <!-- Generate report -->
+                    <!-- 2️⃣ Generate XML + HTML coverage report after tests -->
                     <execution>
                         <id>report</id>
-                        <phase>verify</phase>
+                        <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
+
+                    <!-- 3️⃣ OPTIONAL: Coverage check (DISABLED for SonarCloud Free)
+                         Sonar already enforces coverage via Quality Gate
+
+                    <execution>
+                        <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>     -->
+
                 </executions>
             </plugin>
 

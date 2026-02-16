@@ -18,17 +18,14 @@ public class OrderNotificationConsumer {
             groupId = "notification-group",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void handleOrderCreated(ConsumerRecord<String, OrderCreatedEvent> record,
+    public void handleOrderCreated(ConsumerRecord<String, OrderCreatedEvent> consumerRecord,
                                    Acknowledgment ack) {
 
-        OrderCreatedEvent event = record.value();
+        OrderCreatedEvent event = consumerRecord.value();
 
         try {
             log.info("Order event received from Kafka. OrderId={}, UserId={}, Amount={}",
                     event.getOrderId(), event.getUserId(), event.getTotalAmount());
-
-            // TODO: email, notification, analytics, inventory, etc.
-
             ack.acknowledge(); // manual commit
 
         } catch (Exception e) {

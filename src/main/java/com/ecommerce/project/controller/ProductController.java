@@ -5,11 +5,12 @@ import com.ecommerce.project.payload.ProductDTO;
 import com.ecommerce.project.payload.ProductResponse;
 import com.ecommerce.project.service.ProductService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import static com.ecommerce.project.config.AppConstants.ROLE_ADMIN;
+import static com.ecommerce.project.config.AppConstants.ROLE_SELLER;
 
 import java.io.IOException;
 
@@ -17,14 +18,18 @@ import java.io.IOException;
 @RequestMapping("/api")
 public class ProductController {
 
-    @Autowired
-    ProductService productService;
+    private final ProductService productService;
+
+    // ✅ Constructor Injection (BEST PRACTICE)
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @PostMapping("/admin/categories/{categoryId}/product")
     public ResponseEntity<ProductDTO> addProduct(@Valid @RequestBody ProductDTO productDTO,
                                                  @PathVariable Long categoryId){
         ProductDTO savedProductDTO = productService.addProduct(categoryId, productDTO);
-        return new ResponseEntity<>(savedProductDTO, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedProductDTO);
     }
 
     @PostMapping("/seller/categories/{categoryId}/product")
@@ -70,20 +75,20 @@ public class ProductController {
     @PutMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDTO> updateProduct(@Valid @RequestBody ProductDTO productDTO,
                                                     @PathVariable Long productId){
-        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
+        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO, ROLE_ADMIN );
         return new ResponseEntity<>(updatedProductDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/admin/products/{productId}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
-        ProductDTO deletedProduct = productService.deleteProduct(productId);
+        ProductDTO deletedProduct = productService.deleteProduct(productId,ROLE_ADMIN );
         return new ResponseEntity<>(deletedProduct, HttpStatus.OK);
     }
 
     @PutMapping("/admin/products/{productId}/image")
     public ResponseEntity<ProductDTO> updateProductImage(@PathVariable Long productId,
                                                          @RequestParam("image")MultipartFile image) throws IOException {
-        ProductDTO updatedProduct = productService.updateProductImage(productId, image);
+        ProductDTO updatedProduct = productService.updateProductImage(productId, image,ROLE_ADMIN );
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
@@ -114,20 +119,20 @@ public class ProductController {
     @PutMapping("/seller/products/{productId}")
     public ResponseEntity<ProductDTO> updateProductSeller(@Valid @RequestBody ProductDTO productDTO,
                                                     @PathVariable Long productId){
-        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
+        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO, ROLE_SELLER);
         return new ResponseEntity<>(updatedProductDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/seller/products/{productId}")
     public ResponseEntity<ProductDTO> deleteProductSeller(@PathVariable Long productId){
-        ProductDTO deletedProduct = productService.deleteProduct(productId);
+        ProductDTO deletedProduct = productService.deleteProduct(productId,ROLE_SELLER);
         return new ResponseEntity<>(deletedProduct, HttpStatus.OK);
     }
 
     @PutMapping("/seller/products/{productId}/image")
     public ResponseEntity<ProductDTO> updateProductImageSeller(@PathVariable Long productId,
                                                          @RequestParam("image")MultipartFile image) throws IOException {
-        ProductDTO updatedProduct = productService.updateProductImage(productId, image);
+        ProductDTO updatedProduct = productService.updateProductImage(productId, image,ROLE_SELLER);
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 }

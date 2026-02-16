@@ -16,7 +16,6 @@ import com.ecommerce.project.security.response.UserInfoResponse;
 import com.ecommerce.project.security.services.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseCookie;
@@ -27,11 +26,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @Service
 @Transactional
@@ -41,23 +39,21 @@ public class AuthServiceImpl implements AuthService {
     public static final String ERROR_EMAIL_IS_ALREADY_IN_USE = "Error: Email is already in use!";
     public static final String ERROR_ROLE_IS_NOT_FOUND = "Error: Role is not found.";
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder encoder;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
-    ModelMapper modelMapper;
+    public AuthServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder encoder, ModelMapper modelMapper) {
+        this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.encoder = encoder;
+        this.modelMapper = modelMapper;
+    }
 
     @Override
     public AuthenticationResult login(LoginRequest loginRequest) {
@@ -72,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
+                .toList();
 
         UserInfoResponse response = new UserInfoResponse(userDetails.getId(),
                 userDetails.getUsername(), roles, userDetails.getEmail(), jwtCookie.toString());
@@ -136,12 +132,13 @@ public class AuthServiceImpl implements AuthService {
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
+                .toList();
 
-        UserInfoResponse response = new UserInfoResponse(userDetails.getId(),
-                userDetails.getUsername(), roles);
-
-        return response;
+        return new UserInfoResponse(
+                userDetails.getId(),
+                userDetails.getUsername(),
+                roles
+        );
     }
 
     @Override
@@ -155,7 +152,7 @@ public class AuthServiceImpl implements AuthService {
         List<UserDTO> userDtos = allUsers.getContent()
                 .stream()
                 .map(p -> modelMapper.map(p, UserDTO.class))
-                .collect(Collectors.toList());
+                .toList();
 
         UserResponse response = new UserResponse();
         response.setContent(userDtos);

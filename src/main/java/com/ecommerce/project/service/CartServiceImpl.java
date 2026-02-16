@@ -14,11 +14,9 @@
     import com.ecommerce.project.util.AuthUtil;
     import jakarta.transaction.Transactional;
     import org.modelmapper.ModelMapper;
-    import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
 
     import java.util.List;
-    import java.util.stream.Collectors;
     import java.util.stream.Stream;
 
     @Service
@@ -30,20 +28,19 @@
         private static final String CART_ENTITY = "Cart";
         private static final String CART_ID_FIELD = "cartId";
 
-        @Autowired
-        private CartRepository cartRepository;
+        private final CartRepository cartRepository;
+        private final AuthUtil authUtil;
+        private final ProductRepository productRepository;
+        private final CartItemRepository cartItemRepository;
+        private final ModelMapper modelMapper;
 
-        @Autowired
-        private AuthUtil authUtil;
-
-        @Autowired
-        ProductRepository productRepository;
-
-        @Autowired
-        CartItemRepository cartItemRepository;
-
-        @Autowired
-        ModelMapper modelMapper;
+        public CartServiceImpl(CartRepository cartRepository, AuthUtil authUtil, ProductRepository productRepository, CartItemRepository cartItemRepository, ModelMapper modelMapper) {
+            this.cartRepository = cartRepository;
+            this.authUtil = authUtil;
+            this.productRepository = productRepository;
+            this.cartItemRepository = cartItemRepository;
+            this.modelMapper = modelMapper;
+        }
 
         @Override
         public CartDTO addProductToCart(Long productId, Integer quantity) {
@@ -102,27 +99,25 @@
         public List<CartDTO> getAllCarts() {
             List<Cart> carts = cartRepository.findAll();
 
-            if (carts.size() == 0) {
+            // 🔧 MODIFIED: Sonar recommends using isEmpty() instead of size() == 0
+            if (carts.isEmpty()) {
                 throw new APIException("No cart exists");
             }
 
-            List<CartDTO> cartDTOs = carts.stream().map(cart -> {
+            // 🔧 MODIFIED: directly return the stream result instead of using a temporary variable
+            return carts.stream().map(cart -> {
                 CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
 
+                // 🔧 MODIFIED: collect(Collectors.toList()) ➜ toList()
                 List<ProductDTO> products = cart.getCartItems().stream().map(cartItem -> {
                     ProductDTO productDTO = modelMapper.map(cartItem.getProduct(), ProductDTO.class);
                     productDTO.setQuantity(cartItem.getQuantity()); // Set the quantity from CartItem
                     return productDTO;
-                }).collect(Collectors.toList());
-
+                }).toList(); // Sonar-compliant
 
                 cartDTO.setProducts(products);
-
                 return cartDTO;
-
-            }).collect(Collectors.toList());
-
-            return cartDTOs;
+            }).toList(); // Sonar-compliant// was assigned to cartDTOs
         }
 
         @Override
@@ -221,11 +216,9 @@
             Cart cart = new Cart();
             cart.setTotalPrice(0.00);
             cart.setUser(authUtil.loggedInUser());
-            Cart newCart =  cartRepository.save(cart);
-
-            return newCart;
+            // 🔧 MODIFIED: directly return the repository call
+            return cartRepository.save(cart);
         }
-
 
         @Transactional
         @Override
@@ -270,7 +263,8 @@
             cart.setTotalPrice(cartPrice
                     + (cartItem.getProductPrice() * cartItem.getQuantity()));
 
-            cartItem = cartItemRepository.save(cartItem);
+            // 🔧 FIX: no reassignment
+            cartItemRepository.save(cartItem);
         }
 
         @Transactional
@@ -303,7 +297,7 @@
                         .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_ENTITY, PRODUCT_ID_FIELD, productId));
 
                 // Directly update product stock and total price
-                // product.setQuantity(product.getQuantity() - quantity);
+
                 totalPrice += product.getSpecialPrice() * quantity;
 
                 // Create and save cart item
