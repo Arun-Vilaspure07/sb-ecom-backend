@@ -149,9 +149,7 @@ class CartServiceImplTest {
 
         APIException ex = assertThrows(
                 APIException.class,
-                () -> cartService.updateProductQuantityInCart(1L, -5)
-        );
-
+                () -> cartService.updateProductQuantityInCart(1L, -5));
         assertEquals("The resulting quantity cannot be negative.", ex.getMessage());
     }
 
@@ -227,8 +225,7 @@ class CartServiceImplTest {
 
         APIException ex = assertThrows(
                 APIException.class,
-                () -> cartService.addProductToCart(1L, 1)
-        );
+                () -> cartService.addProductToCart(1L, 1));
 
         assertTrue(ex.getMessage().contains("already exists"));
     }
@@ -245,8 +242,7 @@ class CartServiceImplTest {
 
         APIException ex = assertThrows(
                 APIException.class,
-                () -> cartService.addProductToCart(1L, 1)
-        );
+                () -> cartService.addProductToCart(1L, 1));
 
         assertTrue(ex.getMessage().contains("not available"));
     }
