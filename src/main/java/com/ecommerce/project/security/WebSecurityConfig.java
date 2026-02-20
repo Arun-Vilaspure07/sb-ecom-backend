@@ -25,8 +25,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -69,7 +71,8 @@ public class WebSecurityConfig {
         // No cookies or server-side sessions are used, so CSRF protection is not applicable.
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -85,7 +88,7 @@ public class WebSecurityConfig {
                                 .anyRequest().authenticated()
                 );
 
-        http.addFilterBefore(authTokenFilter,UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.headers(headers ->
                 headers.frameOptions(FrameOptionsConfig::sameOrigin));
@@ -107,6 +110,7 @@ public class WebSecurityConfig {
 
     @Bean
     @Profile("!test")
+    @Transactional
     public CommandLineRunner initData(RoleRepository roleRepository,
                                       UserRepository userRepository,
                                       PasswordEncoder passwordEncoder) {
@@ -122,28 +126,28 @@ public class WebSecurityConfig {
             Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
                     .orElseGet(() -> roleRepository.save(new Role(AppRole.ROLE_ADMIN)));
 
-            Set<Role> userRoles = Set.of(userRole);
-            Set<Role> sellerRoles = Set.of(sellerRole);
-            Set<Role> adminRoles = Set.of(userRole, sellerRole, adminRole);
+            createUserIfMissing(userRepository, roleRepository, passwordEncoder,
+                    "user1", "user1@example.com", userPassword,
+                    Set.of(AppRole.ROLE_USER));
 
-            createUserIfMissing(userRepository, passwordEncoder,
-                    "user1", "user1@example.com", userPassword, userRoles);
+            createUserIfMissing(userRepository, roleRepository, passwordEncoder,
+                    "seller1", "seller1@example.com", sellerPassword,
+                    Set.of(AppRole.ROLE_SELLER));
 
-            createUserIfMissing(userRepository, passwordEncoder,
-                    "seller1", "seller1@example.com", sellerPassword, sellerRoles);
-
-            createUserIfMissing(userRepository, passwordEncoder,
-                    "admin", "admin@example.com", adminPassword, adminRoles);
+            createUserIfMissing(userRepository, roleRepository, passwordEncoder,
+                    "admin", "admin@example.com", adminPassword,
+                    Set.of(AppRole.ROLE_USER, AppRole.ROLE_SELLER, AppRole.ROLE_ADMIN));
         };
     }
 
     @SuppressWarnings("java:S5411")
     private void createUserIfMissing(UserRepository repo,
+                                     RoleRepository roleRepository,
                                      PasswordEncoder encoder,
                                      String username,
                                      String email,
                                      String rawPassword,
-                                     Set<Role> roles) {
+                                     Set<AppRole> roleNames) {
 
         if (repo.existsByUserName(username)) {
             return;
@@ -155,7 +159,15 @@ public class WebSecurityConfig {
         }
 
         User user = new User(username, email, encoder.encode(rawPassword));
-        user.setRoles(roles);
+
+        Set<Role> managedRoles = roleNames.stream()
+                .map(roleName ->
+                        roleRepository.findByRoleName(roleName)
+                                .orElseThrow(() ->
+                                        new IllegalStateException("Role not found: " + roleName)))
+                .collect(Collectors.toSet());
+
+        user.setRoles(managedRoles);
         repo.save(user);
     }
 }
