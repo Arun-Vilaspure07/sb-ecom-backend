@@ -108,6 +108,14 @@ public class WebSecurityConfig {
         );
     }
 
+    private void ensureRoleExists(RoleRepository roleRepository, AppRole role) {
+        roleRepository.findByRoleName(role)
+                .ifPresentOrElse(
+                        r -> { /* role already exists → do nothing */ },
+                        () -> roleRepository.save(new Role(role))
+                );
+    }
+
     @Bean
     @Profile("!test")
     @Transactional
@@ -117,14 +125,9 @@ public class WebSecurityConfig {
 
         return args -> {
 
-            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseGet(() -> roleRepository.save(new Role(AppRole.ROLE_USER)));
-
-            Role sellerRole = roleRepository.findByRoleName(AppRole.ROLE_SELLER)
-                    .orElseGet(() -> roleRepository.save(new Role(AppRole.ROLE_SELLER)));
-
-            Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-                    .orElseGet(() -> roleRepository.save(new Role(AppRole.ROLE_ADMIN)));
+            ensureRoleExists(roleRepository, AppRole.ROLE_USER);
+            ensureRoleExists(roleRepository, AppRole.ROLE_SELLER);
+            ensureRoleExists(roleRepository, AppRole.ROLE_ADMIN);
 
             createUserIfMissing(userRepository, roleRepository, passwordEncoder,
                     "user1", "user1@example.com", userPassword,
