@@ -75,8 +75,10 @@ class WebSecurityConfigTest {
 
         AuthenticationManager manager = webSecurityConfig.authenticationManager(authConfig);
 
-        assertThat(manager).isNotNull();
-        assertThat(manager).isEqualTo(authManager);
+        // Single assertion chain
+        assertThat(manager)
+                .isNotNull()
+                .isEqualTo(authManager);
     }
 
     @Test
