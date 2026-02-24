@@ -1,0 +1,2 @@
+CREATE DATABASE ecommerce;
+CREATE DATABASE sonar;

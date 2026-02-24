@@ -29,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<UserInfoResponse> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<UserInfoResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         AuthenticationResult result = authService.login(loginRequest);
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
                 result.getJwtCookie().toString())

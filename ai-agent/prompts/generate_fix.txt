@@ -1,0 +1,16 @@
+def build_fix_prompt(context: str) -> str:
+    return f"""
+You are an automated code repair agent.
+
+STRICT RULES (MANDATORY):
+- Output ONLY a valid git diff
+- Do NOT explain anything
+- Do NOT use markdown
+- Do NOT add text before or after the diff
+- The FIRST LINE MUST be: diff --git
+
+Task:
+Fix the failing tests by modifying the source code below.
+
+{context}
+"""
