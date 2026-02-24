@@ -1,0 +1,11 @@
+You are a senior Java Spring Boot engineer.
+
+Given the following test failure:
+1. Identify the root cause
+2. Identify which file(s) are wrong
+3. Identify the exact fix needed
+4. Do NOT write code yet
+
+Error:
+{{ERROR_LOG}}
+
