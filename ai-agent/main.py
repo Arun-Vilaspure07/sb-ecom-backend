@@ -15,7 +15,7 @@ from llm.router import get_llm
 from config import MAX_RETRIES
 
 
-# 🔧 UPDATE PATH IF PACKAGE CHANGES
+# 🔧 UPDATE IF PACKAGE PATH CHANGES
 SECURITY_CONFIG = Path(
     "../src/main/java/com/ecommerce/project/security/WebSecurityConfig.java"
 )
@@ -29,6 +29,11 @@ def build_context(failures: list[str]) -> str:
     """
     Combine Java source + test failures
     """
+    if not SECURITY_CONFIG.exists():
+        raise FileNotFoundError(
+            f"Source file not found: {SECURITY_CONFIG.resolve()}"
+        )
+
     source = SECURITY_CONFIG.read_text(encoding="utf-8")
 
     return f"""
@@ -46,17 +51,20 @@ Test failure:
 
 def build_fix_prompt(context: str) -> str:
     """
-    🔥 HARD-CONSTRAIN THE LLM TO OUTPUT A PATCH ONLY
+    HARD-CONSTRAIN the LLM to output ONLY a git diff
     """
     return f"""
 You are an automated code-fixing agent.
 
-STRICT RULES:
-- Output ONLY a valid git diff
+RULES (MANDATORY):
+- Output ONLY a valid unified git diff
+- The FIRST line MUST start with: diff --git
 - Do NOT explain anything
 - Do NOT include markdown
-- Do NOT include comments or text
-- The output MUST start with: diff --git
+- Do NOT include commentary
+- Do NOT include [cmd] blocks
+
+If you cannot produce a valid diff, output NOTHING.
 
 TASK:
 Fix the failing tests by modifying the source code below.
@@ -93,12 +101,14 @@ def main():
 
         previous_errors.add(error_signature)
 
-        # 🔥 Build FULL context
+        # 🔥 Build context
         context = build_context(failures)
-        fix_prompt = build_fix_prompt(context)
+
+        print("[AI] Analyzing failures...")
+        analysis = llm.analyze(context)
 
         print("[AI] Generating patch...")
-        diff = llm.generate_fix(fix_prompt)
+        diff = llm.generate_fix(build_fix_prompt(context))
 
         if not diff or not diff.lstrip().startswith("diff --git"):
             print("[AI] Invalid or empty patch — retrying")
@@ -107,7 +117,7 @@ def main():
         try:
             apply_patch(diff)
             print("[AI] Patch applied successfully")
-            print(explain(failure_text, diff))
+            print(explain(analysis, diff))
         except Exception as e:
             print(f"[AI] Patch failed to apply: {e}")
             continue
