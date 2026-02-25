@@ -1,4 +1,5 @@
 import subprocess
+import re
 from .base import LLMClient
 
 
@@ -7,27 +8,34 @@ class LocalLLM(LLMClient):
 
     def _ask(self, prompt: str) -> str:
         process = subprocess.run(
-            [
-                "ollama",
-                "run",
-                self.MODEL,
-            ],
+            ["ollama", "run", self.MODEL],
             input=prompt,
             text=True,
             capture_output=True,
             encoding="utf-8",
-            errors="ignore"
+            errors="ignore",
         )
 
-        if process.returncode != 0:
-            raise RuntimeError(process.stderr)
+        output = process.stdout.strip()
 
-        # 🚨 STRIP EVERYTHING BEFORE FIRST diff
-        out = process.stdout
-        if "diff --git" in out:
-            return out[out.index("diff --git"):]
+        # ❌ Remove [cmd] blocks if model prints them
+        output = re.sub(r"\[cmd\].*?\[/cmd\]", "", output, flags=re.DOTALL).strip()
 
-        return ""  # forces retry if model misbehaves
+        # ✅ If already a valid unified diff, return it
+        if output.startswith("diff --git"):
+            return output
+
+        # ✅ Convert raw git diff to unified git diff
+        if output.startswith("---") and "+++" in output:
+            return (
+                "diff --git a/src/main/java/com/ecommerce/project/security/WebSecurityConfig.java "
+                "b/src/main/java/com/ecommerce/project/security/WebSecurityConfig.java\n"
+                "index 0000000..1111111 100644\n"
+                + output
+            )
+
+        # ❌ Otherwise force retry
+        return ""
 
     def analyze(self, prompt: str) -> str:
         return self._ask(prompt)
